@@ -1,0 +1,63 @@
+---
+description: Party Barn Mercantile build context – brand, routes, stack, and conventions. Follow when building the Next.js + headless Shopify site.
+alwaysApply: true
+---
+
+# Party Barn Build Rules
+
+Follow the revised plan in `PARTY-BARN-REBUILD-PLAN.md` and the brand board. Do not use SquareSpace, Hydrogen, or any alternative to Next.js + headless Shopify.
+
+## Brand (from brand board)
+
+- **Name:** Party Barn Mercantile. **Tagline:** Rooted in Celebration. **Location:** Old Town Murrieta, California.
+- **Typography:** Sauvage Serif = logo, headlines, web titles, store signage. JetBrains Mono = body, descriptions, pricing, product info, menus. Script/accent font = use sparingly (phrases, packaging, seasonal).
+- **Colors (use exactly):** `#b8a999`, `#e4e2d7`, `#f7f8f3`, `#2c2c2c`, `#dee6e8`, `#9d755c`. Define in Tailwind config and use semantic names (e.g. `brand-sand`, `brand-cream`, `brand-ink`).
+- **Tone:** Curated, Modern, Celebratory, Thoughtful, Elevated, Timeless. Copy should feel welcoming and refined, not generic or loud.
+- **Graphics:** Delicate line illustrations only – balloons, gift bags, cakes, confetti, stars, ribbons. Style: thin line, minimal, vintage-inspired. No busy or cartoon illustration styles.
+
+## Site structure (routes)
+
+| Route | Purpose |
+|-------|--------|
+| `/` | Home – hero “Evoking a Sense of Magic”, services, why Party Barn, opening Spring 26’ CTA, link to Visit Us |
+| `/event-styling` | Event styling + rentals |
+| `/gallery` | Gallery |
+| `/shop` | Collection listing (Shopify) |
+| `/shop/[handle]` | Product page with store pickup messaging |
+| `/balloon-order` | Balloon order form and/or links to balloon products |
+| `/visit` | Visit Us – address, hours, directions, opening announcement (primary B&M “where & when” page) |
+| `/contact` | Contact form only |
+
+**Nav order:** Home · Event Styling · Gallery · Shop · Balloon Order · Visit Us · Contact
+
+**Visit Us address:** 24977 Washington Ave, Suite E, Murrieta, CA 92562. Always note: *Entrance faces Ivy Street.*
+
+- **Gallery images:** All saved gallery assets are in `Images/` with descriptive kebab-case names (e.g. `gallery-dinosaur-safari-bounce-house-table.webp`, `party-barn-logo-black.webp`). See `Images/IMAGES-REFERENCE.md` for the full list and short descriptions. Use these in the new build (e.g. copy to `public/images/gallery/` or reference from `Images/`).
+
+## Tech stack
+
+- Next.js 14+ (App Router), Vercel, Tailwind CSS.
+- Commerce: Shopify Storefront API (GraphQL) only. Store: `party-barn-mercantile.myshopify.com`.
+- Env: `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN`, `SHOPIFY_STOREFRONT_ACCESS_TOKEN`. For local pickup, scope `unauthenticated_read_product_pickup_locations` and enable local pickup for Murrieta in Shopify.
+- Product pages: query `storeAvailability` / `locations`; show “Available for pickup at Party Barn – Murrieta” and address. Use `@inContext(preferredLocationId: ...)` for Murrieta as default when applicable.
+
+## Conventions
+
+- Use **Party Barn Mercantile** and **Rooted in Celebration** in footer, about, and key CTAs; “Party Barn” alone is fine in nav and casual copy.
+- Pre-launch: “Opening Spring 26’” on Home and Visit Us; “Hours to be announced” on Visit Us until real hours exist.
+- Balloon order: hybrid – custom form for bespoke requests; link to Shop for standard balloon products. Form submits via API route (email or client endpoint).
+- Optional AI (“Ask Party Barn”): xAI Grok, `XAI_API_KEY` server-only, API route + system prompt with store context; add in Phase 3, not required for launch.
+
+## Do
+
+- Align all UI to the brand palette and fonts.
+- Keep Visit Us and Contact as distinct pages for B&M launch.
+- Surface store pickup on product pages and at checkout (Shopify local pickup).
+- Keep rules concise; prefer one concern per rule file.
+
+## Don’t
+
+- Introduce alternative stacks (Hydrogen, SquareSpace, custom backend) or extra commerce systems.
+- Use fonts or colors outside the brand board.
+- Use heavy or non–line-art illustrations.
+- Merge Visit Us and Contact into a single page; keep both for launch clarity.

@@ -1,0 +1,60 @@
+---
+description: React and Next.js component patterns for Party Barn – App Router, Tailwind, and Shopify UI.
+globs: **/*.tsx
+alwaysApply: false
+---
+
+# React & Next.js Component Rules
+
+Use when building or editing `.tsx` components for the Party Barn Mercantile site.
+
+## App Router
+
+- **Pages:** Use `app/[route]/page.tsx`. One default export; use async when fetching on the server.
+- **Layouts:** Use `app/layout.tsx` for root (fonts, nav, footer); `app/(marketing)/layout.tsx` or route-specific layouts only when shared structure is needed. Keep layout trees shallow.
+- **Server vs client:** Prefer server components. Add `"use client"` only for interactivity (forms, cart, modals, client-side Shopify cart mutations). Fetch Shopify data in server components or server actions when possible.
+
+```tsx
+// ✅ GOOD – server component, data at page level
+export default async function ShopPage() {
+  const collections = await getCollections();
+  return <CollectionGrid collections={collections} />;
+}
+
+// ✅ GOOD – client only where needed
+"use client";
+export function AddToCartButton({ variantId }: { variantId: string }) {
+  // cart mutation, etc.
+}
+```
+
+## Components
+
+- **Functional components only.** No class components.
+- **Type props explicitly.** Prefer interfaces for component props; use Shopify types (e.g. from `@shopify/storefront-api-client` or project types) for product/collection data.
+- **Extract reusable UI** (buttons, cards, section wrappers) into components; use Tailwind with brand classes (see party-barn-build rule for palette/fonts).
+- **Headings:** Sauvage Serif for titles (e.g. `font-serif` if serif = Sauvage). JetBrains Mono for body and product copy (e.g. `font-mono`).
+
+## Tailwind
+
+- Use semantic brand colors from config (e.g. `bg-brand-cream`, `text-brand-ink`) rather than raw hex in JSX.
+- Prefer Tailwind for layout and typography; avoid inline styles unless dynamic (e.g. CSS variable for a one-off).
+- Keep responsive breakpoints consistent (e.g. `md:` for tablet, `lg:` for desktop).
+
+## Data & Shopify
+
+- **Server:** Call Storefront API (GraphQL) from server components or route handlers. Centralize client in `lib/shopify` or similar; use environment variables for store domain and token.
+- **Product/collection lists:** Fetch in page or layout; pass as props. Avoid client-side fetching for initial product/collection data when SSR is possible.
+- **Cart:** Cart state and mutations live in client components or context; create cart via Storefront API when needed (e.g. first add-to-cart).
+
+## Accessibility & UX
+
+- Use semantic HTML: `<nav>`, `<main>`, `<header>`, `<footer>`, `<button>` vs `<div>` for clickable UI.
+- Form inputs: associate `<label>` with `<input>` (by `id`/`htmlFor`); indicate required and errors.
+- Links: use Next.js `<Link>` for in-app navigation; external links can use `<a target="_blank" rel="noopener noreferrer">` where appropriate.
+
+## Don’t
+
+- Use Pages Router for new routes; use App Router only.
+- Fetch Shopify data in client components when the same data can be fetched on the server.
+- Hardcode brand colors or fonts in components; use Tailwind theme/classes defined in the project config.
