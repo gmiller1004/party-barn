@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 const STORAGE_KEY = "party_barn_chat_conversation_id";
+const SEND_TRANSCRIPT_URL = "/api/chat/send-transcript";
 
 export type ChatMessage = {
   id: string;
@@ -49,11 +50,25 @@ function setStoredConversationId(id: string | null) {
   }
 }
 
+/** Fire-and-forget: request transcript email for this conversation if eligible (has email, not yet sent). */
+function requestSendTranscript(conversationId: string) {
+  if (typeof window === "undefined") return;
+  fetch(SEND_TRANSCRIPT_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ conversationId }),
+    credentials: "include",
+    keepalive: true,
+  }).catch(() => {});
+}
+
 export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [conversationId, setConversationIdState] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const conversationIdRef = useRef<string | null>(null);
+  conversationIdRef.current = conversationId;
 
   const setConversationId = useCallback((id: string | null) => {
     setConversationIdState(id);
@@ -63,6 +78,18 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const stored = getStoredConversationId();
     if (stored) setConversationIdState(stored);
+  }, []);
+
+  // When user closes tab or navigates away, try to send transcript (sendBeacon survives page unload).
+  useEffect(() => {
+    const handlePageHide = () => {
+      const id = conversationIdRef.current;
+      if (!id) return;
+      const payload = JSON.stringify({ conversationId: id });
+      navigator.sendBeacon(SEND_TRANSCRIPT_URL, new Blob([payload], { type: "application/json" }));
+    };
+    window.addEventListener("pagehide", handlePageHide);
+    return () => window.removeEventListener("pagehide", handlePageHide);
   }, []);
 
   const loadHistory = useCallback(async (id: string) => {
@@ -151,7 +178,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         isOpen,
         openChat: () => setIsOpen(true),
-        closeChat: () => setIsOpen(false),
+        closeChat: () => {
+        if (conversationId) requestSendTranscript(conversationId);
+        setIsOpen(false);
+      },
         toggleChat: () => setIsOpen((o) => !o),
         sendMessage,
         loadHistory,
