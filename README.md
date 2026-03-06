@@ -36,3 +36,4 @@ npm start
 - Connect contact and balloon-order forms to an API (e.g. email or client backend).
 - Add Shopify Storefront API for Shop (products, cart, checkout, store pickup).
 - Replace Cormorant with Sauvage Serif when the font is available.
+# party-barn
