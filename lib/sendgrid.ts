@@ -13,9 +13,9 @@ function markdownToHtml(md: string): string {
   return (typeof html === "string" ? html : "").trim();
 }
 
-/** BCC for transcript emails. Comma-separated for multiple (e.g. add Nicole's store email later). */
+/** BCC for transcript emails. Comma-separated for multiple. */
 function getBccEmails(): string[] {
-  const bcc = process.env.TRANSCRIPT_BCC_EMAIL ?? "gmiller@jgmcreative.com";
+  const bcc = process.env.TRANSCRIPT_BCC_EMAIL ?? "gmiller@jgmcreative.com,nicole@party-barn.com";
   return bcc.split(",").map((e) => e.trim()).filter(Boolean);
 }
 
