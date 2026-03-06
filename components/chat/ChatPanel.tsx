@@ -38,20 +38,20 @@ export function ChatPanel() {
         onClick={closeChat}
       />
       <aside
-        className="fixed bottom-0 right-0 top-0 z-50 flex w-full max-w-md flex-col bg-brand-offwhite shadow-2xl md:bottom-auto md:right-6 md:top-24 md:max-h-[calc(100vh-6rem)] md:rounded-xl md:border md:border-brand-cream"
+        className="fixed bottom-0 right-0 top-0 z-50 flex w-full max-w-[100vw] flex-col overflow-x-hidden bg-brand-offwhite shadow-2xl md:bottom-auto md:right-6 md:top-24 md:max-h-[calc(100vh-6rem)] md:max-w-md md:rounded-xl md:border md:border-brand-cream"
         aria-label="Chat with Nicole"
       >
-        <div className="flex items-center justify-between border-b border-brand-cream bg-brand-cream/40 px-4 py-3">
-          <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-brand-cream bg-brand-cream/40 px-4 py-3">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-copper/20 text-brand-copper">
               <span className="font-serif text-lg font-semibold">N</span>
             </div>
-            <div>
-              <h2 className="font-serif text-lg font-semibold text-brand-ink">Nicole</h2>
+            <div className="min-w-0">
+              <h2 className="font-serif text-lg font-semibold text-brand-ink truncate">Nicole</h2>
               <p className="text-xs text-brand-ink/70">Party planning assistant</p>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1">
             {messages.length > 0 && (
               <button
                 type="button"
@@ -64,17 +64,18 @@ export function ChatPanel() {
             <button
               type="button"
               onClick={closeChat}
-              className="rounded p-2 text-brand-ink/80 hover:bg-brand-cream hover:text-brand-ink"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-brand-ink/80 hover:bg-brand-cream hover:text-brand-ink md:min-h-0 md:min-w-0"
               aria-label="Close chat"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
+              <span className="ml-1.5 text-sm font-medium md:hidden">Close</span>
             </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <p className="font-serif text-lg text-brand-ink">Hi, I’m Nicole.</p>
@@ -91,7 +92,7 @@ export function ChatPanel() {
                 className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
+                  className={`max-w-[85%] min-w-0 rounded-2xl px-4 py-2.5 break-words ${
                     m.role === "user"
                       ? "bg-brand-ink text-brand-offwhite"
                       : "bg-brand-cream/80 text-brand-ink"
@@ -134,14 +135,14 @@ export function ChatPanel() {
           <div ref={bottomRef} />
         </div>
 
-        <form onSubmit={handleSubmit} className="border-t border-brand-cream p-4">
-          <div className="flex gap-2">
+        <form onSubmit={handleSubmit} className="shrink-0 border-t border-brand-cream p-4">
+          <div className="flex min-w-0 gap-2">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask Nicole anything about your party…"
-              className="flex-1 rounded-lg border border-brand-cream bg-white px-4 py-3 text-sm text-brand-ink placeholder:text-brand-ink/50 focus:border-brand-copper focus:outline-none focus:ring-1 focus:ring-brand-copper"
+              className="min-w-0 flex-1 rounded-lg border border-brand-cream bg-white px-4 py-3 text-sm text-brand-ink placeholder:text-brand-ink/50 focus:border-brand-copper focus:outline-none focus:ring-1 focus:ring-brand-copper"
               disabled={isLoading}
               maxLength={2000}
             />
@@ -153,6 +154,13 @@ export function ChatPanel() {
               Send
             </button>
           </div>
+          <button
+            type="button"
+            onClick={closeChat}
+            className="mt-3 w-full rounded-lg border border-brand-cream py-2.5 text-center text-sm font-medium text-brand-ink/80 hover:bg-brand-cream/80 md:hidden"
+          >
+            Close chat · Back to site
+          </button>
         </form>
       </aside>
     </>
