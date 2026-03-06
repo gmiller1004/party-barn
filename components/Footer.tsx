@@ -7,7 +7,7 @@ export function Footer() {
         <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between md:gap-12">
           <div className="space-y-3">
             <p className="font-serif text-lg font-semibold text-brand-ink">
-              Party Barn Mercantile
+              Party Barn
             </p>
             <p className="text-sm text-brand-ink/80 max-w-sm">
               <span className="font-script text-brand-copper text-base">Rooted in Celebration.</span>{" "}

@@ -1,6 +1,6 @@
-# Party Barn Mercantile
+# Party Barn
 
-Next.js site for Party Barn Mercantile — premium balloons, curated party goods, and event styling in Old Town Murrieta. Built with Next.js 15 (App Router), Tailwind CSS, and prepared for headless Shopify.
+Next.js site for Party Barn — premium balloons, curated party goods, and event styling in Old Town Murrieta. Built with Next.js 15 (App Router), Tailwind CSS, and prepared for headless Shopify.
 
 ## Run locally
 

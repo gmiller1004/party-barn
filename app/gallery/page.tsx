@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 
 export const metadata: Metadata = {
-  title: "Gallery | Party Barn Mercantile",
+  title: "Gallery | Party Barn",
   description:
     "See our event styling, balloon garlands, and party setups. Celebrations styled with a clean, elevated aesthetic.",
 };

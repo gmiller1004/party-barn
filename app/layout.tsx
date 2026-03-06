@@ -39,11 +39,11 @@ const madisonSauvageScript = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Party Barn Mercantile | Rooted in Celebration",
+  title: "Party Barn | Rooted in Celebration",
   description:
     "A modern party studio offering premium balloons, curated party goods, and stylish gifts in Old Town Murrieta. Thoughtful event styling with a clean, elevated aesthetic.",
   openGraph: {
-    title: "Party Barn Mercantile | Rooted in Celebration",
+    title: "Party Barn | Rooted in Celebration",
     description:
       "Premium balloons, curated party goods, and event styling in Old Town Murrieta.",
   },

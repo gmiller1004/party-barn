@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact | Party Barn Mercantile",
+  title: "Contact | Party Barn",
   description:
-    "Get in touch with Party Barn Mercantile for event styling, balloon orders, and party supplies in Old Town Murrieta.",
+    "Get in touch with Party Barn for event styling, balloon orders, and party supplies in Old Town Murrieta.",
 };
 
 export default function ContactPage() {

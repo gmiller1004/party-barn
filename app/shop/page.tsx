@@ -4,7 +4,7 @@ import { getProducts } from "@/lib/shopify";
 import { ShopContent } from "@/components/shop/ShopContent";
 
 export const metadata: Metadata = {
-  title: "Shop | Party Barn Mercantile",
+  title: "Shop | Party Barn",
   description:
     "Shop premium party supplies, balloons, and curated goods. Order online for store pickup in Murrieta.",
 };

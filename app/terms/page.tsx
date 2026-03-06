@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms and Conditions | Party Barn Mercantile",
+  title: "Terms and Conditions | Party Barn",
 };
 
 export default function TermsPage() {

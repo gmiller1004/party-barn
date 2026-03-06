@@ -12,9 +12,9 @@ type Props = { params: Promise<{ handle: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { handle } = await params;
   const product = await getProductByHandle(handle);
-  if (!product) return { title: "Product | Party Barn Mercantile" };
+  if (!product) return { title: "Product | Party Barn" };
   return {
-    title: `${product.title} | Party Barn Mercantile`,
+    title: `${product.title} | Party Barn`,
     description: product.description?.slice(0, 160) ?? undefined,
   };
 }

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Visit Us | Party Barn Mercantile",
+  title: "Visit Us | Party Barn",
   description:
-    "Party Barn Mercantile in Old Town Murrieta. Address, hours, and directions. Opening Spring 26'. Entrance faces Ivy Street.",
+    "Party Barn in Old Town Murrieta. Address, hours, and directions. Opening Spring 26'. Entrance faces Ivy Street.",
 };
 
 export default function VisitPage() {
@@ -36,7 +36,7 @@ export default function VisitPage() {
             </p>
             <address className="mt-8 not-italic">
               <p className="font-serif text-xl font-semibold text-brand-ink">
-                Party Barn Mercantile
+                Party Barn
               </p>
               <p className="mt-2 text-brand-ink/85">
                 24977 Washington Ave, Suite E

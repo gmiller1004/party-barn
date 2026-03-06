@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { useChat } from "./ChatContext";
 
 export function ChatPanel() {
@@ -96,7 +97,29 @@ export function ChatPanel() {
                       : "bg-brand-cream/80 text-brand-ink"
                   }`}
                 >
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{m.content}</p>
+                  {m.role === "assistant" ? (
+                    <div className="text-sm leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0">
+                      <ReactMarkdown
+                        components={{
+                          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                          ul: ({ children }) => <ul className="my-2 space-y-0.5 pl-4 list-disc">{children}</ul>,
+                          ol: ({ children }) => <ol className="my-2 space-y-0.5 pl-4 list-decimal">{children}</ol>,
+                          h2: ({ children }) => <h2 className="font-serif font-semibold mt-3 mb-1 first:mt-0 text-base">{children}</h2>,
+                          h3: ({ children }) => <h3 className="font-serif font-semibold mt-3 mb-1 first:mt-0 text-sm">{children}</h3>,
+                          a: ({ href, children }) => (
+                            <a href={href} target="_blank" rel="noopener noreferrer" className="underline hover:opacity-90">
+                              {children}
+                            </a>
+                          ),
+                        }}
+                      >
+                        {m.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{m.content}</p>
+                  )}
                 </div>
               </li>
             ))}

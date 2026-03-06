@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createConversation, addMessage, getMessages, conversationExists } from "@/lib/db";
+import {
+  createConversation,
+  addMessage,
+  getMessages,
+  getConversation,
+  conversationExists,
+  setContactName,
+  setContactEmail,
+  setTranscriptEmailedAt,
+} from "@/lib/db";
+import { sendTranscriptEmail, type TranscriptMessage } from "@/lib/sendgrid";
 import { NICOLE_SYSTEM_PROMPT } from "@/lib/nicole-prompt";
 
 const XAI_URL = "https://api.x.ai/v1/responses";
@@ -7,7 +17,18 @@ const MODEL = "grok-4-1-fast-reasoning";
 
 type InputMessage = { role: "system" | "user" | "assistant"; content: string };
 
-/** xAI Responses API returns output as array of items; assistant message has type "message" and content[].type "output_text". */
+/** Short phrase from first message for "evoke some magic on your [idea]". */
+function phraseFromFirstMessage(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return "idea";
+  const max = 50;
+  if (trimmed.length <= max) return trimmed;
+  const cut = trimmed.slice(0, max);
+  const lastSpace = cut.lastIndexOf(" ");
+  return lastSpace > 20 ? cut.slice(0, lastSpace) : cut;
+}
+
+/** xAI Responses API: extract assistant text from response body. */
 function getOutputText(body: unknown): string {
   if (body && typeof body === "object" && "output_text" in body && typeof (body as { output_text?: string }).output_text === "string") {
     const t = (body as { output_text: string }).output_text.trim();
@@ -36,7 +57,36 @@ function getOutputText(body: unknown): string {
   return "";
 }
 
-/** POST /api/chat – send a message and get Nicole's reply. Creates conversation if needed. */
+/** Call Grok and return assistant text. */
+async function callGrok(input: InputMessage[], apiKey: string): Promise<string> {
+  const xaiRes = await fetch(XAI_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({ model: MODEL, input, store: false }),
+    signal: AbortSignal.timeout(120_000),
+  });
+
+  if (!xaiRes.ok) {
+    const errText = await xaiRes.text();
+    console.error("xAI API error:", xaiRes.status, errText);
+    throw new Error("Nicole is temporarily unavailable. Please try again.");
+  }
+
+  const xaiJson: unknown = await xaiRes.json();
+  const text = getOutputText(xaiJson);
+  if (!text) {
+    console.error("xAI response had no output_text.");
+    throw new Error("Nicole didn’t return a reply. Please try again.");
+  }
+  return text;
+}
+
+const EMAIL_SKIP_PATTERN = /^(skip|no|nope|nah|optional|pass|none|n\/a)$/i;
+
+/** POST /api/chat – send a message and get Nicole's reply. Name/email collection before first full response. */
 export async function POST(request: NextRequest) {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) {
@@ -76,8 +126,89 @@ export async function POST(request: NextRequest) {
   }
 
   await addMessage(conversationId, "user", userContent);
-
   const history = await getMessages(conversationId);
+  const conv = await getConversation(conversationId);
+  if (!conv) {
+    return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
+  }
+
+  const userMessages = history.filter((m) => m.role === "user");
+  const userCount = userMessages.length;
+  const firstUserMessage = userMessages[0]?.content ?? "";
+
+  // Step 1: First message – ask for name (framed around their idea)
+  if (userCount === 1 && !conv.contact_name) {
+    const phrase = phraseFromFirstMessage(firstUserMessage);
+    const reply =
+      `Thanks for reaching out! Give me just a few seconds to evoke some magic on your ${phrase}. In the meantime, what's your name?`;
+    await addMessage(conversationId, "assistant", reply);
+    return NextResponse.json({ conversationId, message: reply });
+  }
+
+  // Step 2: Second message – treat as name, then ask for email (optional)
+  if (userCount === 2 && !conv.contact_name) {
+    const name = userContent;
+    await setContactName(conversationId, name);
+    const reply = `Thanks, ${name}! I'd love to send you the details of this chat so you don't lose it. Would you like me to email you a copy for follow-up? If so, what's your email address? (Totally optional — just say "skip" or "no" if you prefer.)`;
+    await addMessage(conversationId, "assistant", reply);
+    return NextResponse.json({ conversationId, message: reply });
+  }
+
+  // Step 3: Third message – email or skip, then call Grok with first message + name, send transcript if email given
+  if (userCount === 3 && conv.contact_name && conv.contact_email === null && conv.transcript_emailed_at === null) {
+    const isSkip = EMAIL_SKIP_PATTERN.test(userContent) || userContent.length < 3;
+    const email = isSkip ? null : userContent;
+    if (!isSkip && email) {
+      const simpleEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!simpleEmail.test(email)) {
+        await addMessage(
+          conversationId,
+          "assistant",
+          "That doesn't look like a valid email. No worries — just say \"skip\" if you'd rather not share it, and I'll still send your full response!"
+        );
+        return NextResponse.json({
+          conversationId,
+          message:
+            "That doesn't look like a valid email. No worries — just say \"skip\" if you'd rather not share it, and I'll still send your full response!",
+        });
+      }
+    }
+    await setContactEmail(conversationId, email);
+
+    const name = conv.contact_name;
+    const systemWithName = `${NICOLE_SYSTEM_PROMPT}\n\n**Right now:** The user just shared their name (${name}) and ${email ? "their email for the transcript." : "chose not to share an email."} Address them by name (${name}) in your reply. They asked: "${firstUserMessage}" — give your full, helpful party-planning response now.`;
+    const input: InputMessage[] = [
+      { role: "system", content: systemWithName },
+      { role: "user", content: firstUserMessage },
+    ];
+    let assistantText: string;
+    try {
+      assistantText = await callGrok(input, apiKey);
+    } catch (e) {
+      return NextResponse.json(
+        { error: e instanceof Error ? e.message : "Nicole is temporarily unavailable." },
+        { status: 502 }
+      );
+    }
+    await addMessage(conversationId, "assistant", assistantText);
+
+    if (email) {
+      const allMessages = await getMessages(conversationId);
+      const transcript: TranscriptMessage[] = allMessages
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+      try {
+        await sendTranscriptEmail(email, name, transcript);
+        await setTranscriptEmailedAt(conversationId);
+      } catch (err) {
+        console.error("Send transcript email failed:", err);
+      }
+    }
+
+    return NextResponse.json({ conversationId, message: assistantText });
+  }
+
+  // Normal flow: full history to Grok
   const input: InputMessage[] = [
     { role: "system", content: NICOLE_SYSTEM_PROMPT },
     ...history
@@ -85,48 +216,16 @@ export async function POST(request: NextRequest) {
       .map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
   ];
 
-  const xaiRes = await fetch(XAI_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      input,
-      store: false,
-    }),
-    signal: AbortSignal.timeout(120_000),
-  });
-
-  if (!xaiRes.ok) {
-    const errText = await xaiRes.text();
-    console.error("xAI API error:", xaiRes.status, errText);
+  let assistantText: string;
+  try {
+    assistantText = await callGrok(input, apiKey);
+  } catch (e) {
     return NextResponse.json(
-      { error: "Nicole is temporarily unavailable. Please try again." },
-      { status: 502 }
-    );
-  }
-
-  const xaiJson: unknown = await xaiRes.json();
-  const assistantText = getOutputText(xaiJson);
-
-  if (!assistantText) {
-    const logSnippet =
-      typeof xaiJson === "object" && xaiJson !== null
-        ? JSON.stringify(Object.keys(xaiJson as Record<string, unknown>))
-        : String(xaiJson).slice(0, 200);
-    console.error("xAI response had no output_text. Top-level keys:", logSnippet);
-    return NextResponse.json(
-      { error: "Nicole didn’t return a reply. Please try again." },
+      { error: e instanceof Error ? e.message : "Nicole is temporarily unavailable." },
       { status: 502 }
     );
   }
 
   await addMessage(conversationId, "assistant", assistantText);
-
-  return NextResponse.json({
-    conversationId,
-    message: assistantText,
-  });
+  return NextResponse.json({ conversationId, message: assistantText });
 }

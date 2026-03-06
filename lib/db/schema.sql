@@ -4,8 +4,16 @@
 CREATE TABLE IF NOT EXISTS conversations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  contact_name TEXT,
+  contact_email TEXT,
+  transcript_emailed_at TIMESTAMPTZ
 );
+
+-- Run this if the table already exists (add contact/email columns):
+-- ALTER TABLE conversations ADD COLUMN IF NOT EXISTS contact_name TEXT;
+-- ALTER TABLE conversations ADD COLUMN IF NOT EXISTS contact_email TEXT;
+-- ALTER TABLE conversations ADD COLUMN IF NOT EXISTS transcript_emailed_at TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

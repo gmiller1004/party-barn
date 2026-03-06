@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Balloon Order | Party Barn Mercantile",
+  title: "Balloon Order | Party Barn",
   description:
     "Order custom balloons and garlands from Party Barn. Premium helium balloons and grab-n-go garlands in Old Town Murrieta.",
 };

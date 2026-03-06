@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const metadata: Metadata = {
-  title: "Event Styling + Rentals | Party Barn Mercantile",
+  title: "Event Styling + Rentals | Party Barn",
   description:
     "Thoughtful event styling with a clean, elevated aesthetic. Delivery and on-site setup for a seamless celebration in Old Town Murrieta.",
 };

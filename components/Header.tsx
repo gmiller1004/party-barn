@@ -25,11 +25,11 @@ export function Header() {
         <Link
           href="/"
           className="flex shrink-0 items-center gap-3 focus:outline-none focus:ring-2 focus:ring-brand-copper focus:ring-offset-2 rounded"
-          aria-label="Party Barn Mercantile – Home"
+          aria-label="Party Barn – Home"
         >
           <Image
             src="/images/gallery/party-barn-logo-black.webp"
-            alt="Party Barn Mercantile"
+            alt="Party Barn"
             width={140}
             height={44}
             className="h-9 w-auto md:h-10"

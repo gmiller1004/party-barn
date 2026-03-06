@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Party Barn Mercantile",
+  title: "Privacy Policy | Party Barn",
 };
 
 export default function PrivacyPage() {
