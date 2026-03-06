@@ -4,11 +4,30 @@ import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useChat } from "./ChatContext";
 
+/** On mobile, size the panel to visualViewport so it doesn't overflow when the keyboard opens. */
+function useVisualViewportWidth(isOpen: boolean) {
+  const [width, setWidth] = useState<number | null>(null);
+  useEffect(() => {
+    if (!isOpen || typeof window === "undefined" || !window.visualViewport) return;
+    const vv = window.visualViewport;
+    const update = () => setWidth(vv.width);
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, [isOpen]);
+  return width;
+}
+
 export function ChatPanel() {
   const { isOpen, closeChat, messages, sendMessage, isLoading, conversationId, loadHistory, startNewConversation } =
     useChat();
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const viewportWidth = useVisualViewportWidth(isOpen);
 
   useEffect(() => {
     if (isOpen && conversationId && messages.length === 0) {
@@ -38,7 +57,12 @@ export function ChatPanel() {
         onClick={closeChat}
       />
       <aside
-        className="fixed inset-x-0 bottom-0 top-0 z-50 flex flex-col overflow-x-hidden bg-brand-offwhite shadow-2xl md:inset-auto md:right-6 md:top-24 md:w-full md:max-w-md md:max-h-[calc(100vh-6rem)] md:rounded-xl md:border md:border-brand-cream"
+        className="fixed bottom-0 right-0 top-0 z-50 flex w-full max-w-[100vw] flex-col overflow-x-hidden bg-brand-offwhite shadow-2xl md:right-6 md:top-24 md:max-h-[calc(100vh-6rem)] md:max-w-md md:rounded-xl md:border md:border-brand-cream"
+        style={
+          typeof viewportWidth === "number" && viewportWidth > 0 && viewportWidth < 768
+            ? { width: viewportWidth, maxWidth: "100%" }
+            : undefined
+        }
         aria-label="Chat with Nicole"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-brand-cream bg-brand-cream/40 px-4 py-3">
@@ -136,20 +160,20 @@ export function ChatPanel() {
         </div>
 
         <form onSubmit={handleSubmit} className="w-full shrink-0 overflow-hidden border-t border-brand-cream p-4">
-          <div className="flex w-full min-w-0 gap-2">
+          <div className="grid grid-cols-[1fr_auto] gap-2">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask Nicole anything about your party…"
-              className="min-w-0 flex-1 rounded-lg border border-brand-cream bg-white px-4 py-3 text-sm text-brand-ink placeholder:text-brand-ink/50 focus:border-brand-copper focus:outline-none focus:ring-1 focus:ring-brand-copper"
+              className="min-w-0 rounded-lg border border-brand-cream bg-white px-4 py-3 text-base text-brand-ink placeholder:text-brand-ink/50 focus:border-brand-copper focus:outline-none focus:ring-1 focus:ring-brand-copper md:text-sm"
               disabled={isLoading}
               maxLength={2000}
             />
             <button
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="shrink-0 rounded-lg bg-brand-copper px-4 py-3 text-sm font-medium text-white hover:bg-brand-copper/90 disabled:opacity-50 transition-colors"
+              className="rounded-lg bg-brand-copper px-4 py-3 text-sm font-medium text-white hover:bg-brand-copper/90 disabled:opacity-50 transition-colors"
             >
               Send
             </button>
