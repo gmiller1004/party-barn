@@ -7,20 +7,30 @@ const MODEL = "grok-4-1-fast-reasoning";
 
 type InputMessage = { role: "system" | "user" | "assistant"; content: string };
 
-/** Extract assistant text from xAI Responses API response. */
-function getOutputText(body: {
-  output?: Array<{ type?: string; text?: string }>;
-  output_text?: string;
-}): string {
-  if (typeof body.output_text === "string" && body.output_text.trim()) {
-    return body.output_text.trim();
+/** xAI Responses API returns output as array of items; assistant message has type "message" and content[].type "output_text". */
+function getOutputText(body: unknown): string {
+  if (body && typeof body === "object" && "output_text" in body && typeof (body as { output_text?: string }).output_text === "string") {
+    const t = (body as { output_text: string }).output_text.trim();
+    if (t) return t;
   }
-  const output = body.output;
-  if (Array.isArray(output)) {
-    for (const item of output) {
-      if (item?.type === "output_text" && typeof item.text === "string") {
-        return item.text.trim();
+  const output = body && typeof body === "object" && "output" in body ? (body as { output?: unknown[] }).output : undefined;
+  if (!Array.isArray(output)) return "";
+
+  for (const item of output) {
+    if (item && typeof item === "object" && (item as { type?: string }).type === "message") {
+      const content = (item as { content?: Array<{ type?: string; text?: string }> }).content;
+      if (Array.isArray(content)) {
+        for (const block of content) {
+          if (block?.type === "output_text" && typeof block.text === "string") {
+            const t = block.text.trim();
+            if (t) return t;
+          }
+        }
       }
+    }
+    if (item && typeof item === "object" && (item as { type?: string }).type === "output_text" && "text" in item) {
+      const t = String((item as { text: string }).text).trim();
+      if (t) return t;
     }
   }
   return "";
@@ -95,13 +105,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const xaiJson = (await xaiRes.json()) as {
-    output?: Array<{ type?: string; text?: string }>;
-    output_text?: string;
-  };
+  const xaiJson: unknown = await xaiRes.json();
   const assistantText = getOutputText(xaiJson);
 
   if (!assistantText) {
+    const logSnippet =
+      typeof xaiJson === "object" && xaiJson !== null
+        ? JSON.stringify(Object.keys(xaiJson as Record<string, unknown>))
+        : String(xaiJson).slice(0, 200);
+    console.error("xAI response had no output_text. Top-level keys:", logSnippet);
     return NextResponse.json(
       { error: "Nicole didn’t return a reply. Please try again." },
       { status: 502 }

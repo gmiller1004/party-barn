@@ -101,7 +101,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           message: trimmed,
         }),
       });
-      const data = await res.json();
+      let data: { conversationId?: string; message?: string; error?: string };
+      try {
+        data = await res.json();
+      } catch {
+        data = {};
+      }
 
       if (!res.ok) {
         setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
@@ -119,10 +124,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error(e);
       setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
+      const errContent =
+        e instanceof Error && e.message ? e.message : "Sorry, I couldn’t reply right now. Please try again in a moment.";
       const errMsg: ChatMessage = {
         id: makeId(),
         role: "assistant",
-        content: "Sorry, I couldn’t reply right now. Please try again in a moment.",
+        content: errContent,
         createdAt: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errMsg]);
