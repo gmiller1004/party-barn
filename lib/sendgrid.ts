@@ -138,7 +138,7 @@ export async function sendContactNotificationEmail(data: ContactSubmission): Pro
     throw new Error("SENDGRID_API_KEY and SENDER_EMAIL are required to send contact notifications.");
   }
 
-  const subjectLabel = SUBJECT_LABELS[data.subject] ?? data.subject || "Contact form";
+  const subjectLabel = SUBJECT_LABELS[data.subject] ?? (data.subject || "Contact form");
   const safeName = data.name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const safeEmail = data.email.replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const safeMessage = data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
