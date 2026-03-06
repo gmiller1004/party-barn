@@ -9,24 +9,12 @@ import {
   setContactEmail,
   setTranscriptEmailedAt,
 } from "@/lib/db";
-import { sendTranscriptEmail, type TranscriptMessage } from "@/lib/sendgrid";
 import { NICOLE_SYSTEM_PROMPT } from "@/lib/nicole-prompt";
 
 const XAI_URL = "https://api.x.ai/v1/responses";
 const MODEL = "grok-4-1-fast-reasoning";
 
 type InputMessage = { role: "system" | "user" | "assistant"; content: string };
-
-/** Short phrase from first message for "evoke some magic on your [idea]". */
-function phraseFromFirstMessage(text: string): string {
-  const trimmed = text.trim();
-  if (!trimmed) return "idea";
-  const max = 50;
-  if (trimmed.length <= max) return trimmed;
-  const cut = trimmed.slice(0, max);
-  const lastSpace = cut.lastIndexOf(" ");
-  return lastSpace > 20 ? cut.slice(0, lastSpace) : cut;
-}
 
 /** xAI Responses API: extract assistant text from response body. */
 function getOutputText(body: unknown): string {
@@ -86,6 +74,21 @@ async function callGrok(input: InputMessage[], apiKey: string): Promise<string> 
 
 const EMAIL_SKIP_PATTERN = /^(skip|no|nope|nah|optional|pass|none|n\/a)$/i;
 
+/** First message sounds like party/event planning (vs. hours, order, product, etc.). */
+function isPartyPlanningContext(firstMessage: string): boolean {
+  const lower = firstMessage.toLowerCase().trim();
+  const partyTerms = /\b(party|parties|birthday|celebration|event|planning|shower|balloon|theme|decor|favors|venue|guest)\b/;
+  return partyTerms.test(lower) || lower.length < 20;
+}
+
+/** Reply asking for name, framed by whether they're asking about party planning or something else. */
+function getNameAskReply(firstMessage: string): string {
+  if (isPartyPlanningContext(firstMessage)) {
+    return "Thanks for reaching out! Give me just a few seconds to evoke some magic on your party idea. In the meantime, what's your name?";
+  }
+  return "Thanks for reaching out! I'd be happy to help with that. Give me just a moment — and in the meantime, what's your name?";
+}
+
 /** POST /api/chat – send a message and get Nicole's reply. Name/email collection before first full response. */
 export async function POST(request: NextRequest) {
   const apiKey = process.env.XAI_API_KEY;
@@ -136,11 +139,9 @@ export async function POST(request: NextRequest) {
   const userCount = userMessages.length;
   const firstUserMessage = userMessages[0]?.content ?? "";
 
-  // Step 1: First message – ask for name (framed around their idea)
+  // Step 1: First message – ask for name (contextual: party planning vs. other)
   if (userCount === 1 && !conv.contact_name) {
-    const phrase = phraseFromFirstMessage(firstUserMessage);
-    const reply =
-      `Thanks for reaching out! Give me just a few seconds to evoke some magic on your ${phrase}. In the meantime, what's your name?`;
+    const reply = getNameAskReply(firstUserMessage);
     await addMessage(conversationId, "assistant", reply);
     return NextResponse.json({ conversationId, message: reply });
   }
@@ -191,20 +192,7 @@ export async function POST(request: NextRequest) {
       );
     }
     await addMessage(conversationId, "assistant", assistantText);
-
-    if (email) {
-      const allMessages = await getMessages(conversationId);
-      const transcript: TranscriptMessage[] = allMessages
-        .filter((m) => m.role === "user" || m.role === "assistant")
-        .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
-      try {
-        await sendTranscriptEmail(email, name, transcript);
-        await setTranscriptEmailedAt(conversationId);
-      } catch (err) {
-        console.error("Send transcript email failed:", err);
-      }
-    }
-
+    // Transcript is sent later by cron (after a short delay so they can read and ask more)
     return NextResponse.json({ conversationId, message: assistantText });
   }
 

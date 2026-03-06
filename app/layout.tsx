@@ -38,14 +38,45 @@ const madisonSauvageScript = localFont({
   display: "swap",
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://party-barn.vercel.app");
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Party Barn | Rooted in Celebration",
   description:
     "A modern party studio offering premium balloons, curated party goods, and stylish gifts in Old Town Murrieta. Thoughtful event styling with a clean, elevated aesthetic.",
+  keywords: [
+    "Party Barn",
+    "Murrieta",
+    "Old Town Murrieta",
+    "party supplies Murrieta",
+    "balloons Murrieta",
+    "event styling",
+    "party studio",
+    "balloon garlands",
+    "birthday party",
+    "baby shower",
+  ],
   openGraph: {
     title: "Party Barn | Rooted in Celebration",
     description:
       "Premium balloons, curated party goods, and event styling in Old Town Murrieta.",
+    url: "/",
+    siteName: "Party Barn",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Party Barn | Rooted in Celebration",
+    description: "Premium balloons, curated party goods, and event styling in Old Town Murrieta.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
   },
 };
 
@@ -60,6 +91,31 @@ export default function RootLayout({
       className={`${playfair.variable} ${dmSans.variable} ${jetbrainsMono.variable} ${madisonSauvageScript.variable}`}
     >
       <body className="min-h-screen flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "LocalBusiness",
+              name: "Party Barn",
+              description: "Party studio offering premium balloons, curated party goods, and event styling in Old Town Murrieta.",
+              url: siteUrl,
+              address: {
+                "@type": "PostalAddress",
+                streetAddress: "24977 Washington Ave, Suite E",
+                addressLocality: "Murrieta",
+                addressRegion: "CA",
+                postalCode: "92562",
+              },
+              geo: {
+                "@type": "GeoCoordinates",
+                latitude: 33.5584,
+                longitude: -117.2017,
+              },
+              areaServed: { "@type": "City", name: "Murrieta", containedInPlace: { "@type": "State", name: "California" } },
+            }),
+          }}
+        />
         <ChatProvider>
           <Header />
           <main className="flex-1">{children}</main>

@@ -121,3 +121,16 @@ export async function setTranscriptEmailedAt(conversationId: string): Promise<vo
     UPDATE conversations SET transcript_emailed_at = now(), updated_at = now() WHERE id = ${conversationId}
   `;
 }
+
+/** Conversations that have an email, no transcript sent yet, and were last updated at least N minutes ago. */
+export async function getConversationsPendingTranscript(minutesAgo: number): Promise<Array<{ id: string; contact_name: string | null; contact_email: string }>> {
+  const sql = getSql();
+  const cutoff = new Date(Date.now() - minutesAgo * 60 * 1000).toISOString();
+  const rows = await sql`
+    SELECT id, contact_name, contact_email
+    FROM conversations
+    WHERE contact_email IS NOT NULL AND contact_email != '' AND transcript_emailed_at IS NULL
+      AND updated_at <= ${cutoff}
+  `;
+  return rows as Array<{ id: string; contact_name: string | null; contact_email: string }>;
+}

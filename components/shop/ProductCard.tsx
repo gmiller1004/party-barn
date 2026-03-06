@@ -19,9 +19,10 @@ export function ProductCard({ product, onMoreInfo }: Props) {
   const price = product.priceRange.minVariantPrice;
   const firstVariant = product.variants.nodes[0];
   const pickup = getFirstVariantPickup(product);
+  const soldOut = !product.availableForSale || !firstVariant?.availableForSale;
 
   const handleAddToCart = async () => {
-    if (!firstVariant) return;
+    if (!firstVariant || soldOut) return;
     setAdding(true);
     try {
       await addToCart(firstVariant.id, quantity);
@@ -48,7 +49,12 @@ export function ProductCard({ product, onMoreInfo }: Props) {
             No image
           </span>
         )}
-        {pickup?.available && (
+        {soldOut && (
+          <span className="absolute bottom-2 left-2 right-2 rounded bg-brand-ink/90 px-2 py-1 text-center text-xs font-medium text-brand-offwhite">
+            Sold out
+          </span>
+        )}
+        {!soldOut && pickup?.available && (
           <span className="absolute bottom-2 left-2 right-2 rounded bg-brand-ink/90 px-2 py-1 text-center text-xs font-medium text-brand-offwhite">
             Available for store pickup
           </span>
@@ -65,26 +71,34 @@ export function ProductCard({ product, onMoreInfo }: Props) {
           <p className="mt-1 text-xs text-brand-ink/70">{pickup.pickUpTime}</p>
         )}
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <label className="sr-only" htmlFor={`qty-${product.id}`}>
-            Quantity
-          </label>
-          <input
-            id={`qty-${product.id}`}
-            type="number"
-            min={1}
-            max={100}
-            value={quantity}
-            onChange={(e) => setQuantity(Math.max(1, Math.min(100, parseInt(e.target.value, 10) || 1)))}
-            className="w-16 rounded border border-brand-cream bg-white px-2 py-1.5 text-center text-sm text-brand-ink focus:border-brand-copper focus:outline-none focus:ring-1 focus:ring-brand-copper"
-          />
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            disabled={adding || !firstVariant}
-            className="rounded bg-brand-ink px-4 py-2 text-sm font-medium text-brand-offwhite hover:bg-brand-ink/90 disabled:opacity-50 transition-colors"
-          >
-            {adding ? "Adding…" : "Add to cart"}
-          </button>
+          {soldOut ? (
+            <span className="rounded border border-brand-cream bg-brand-cream/50 px-4 py-2 text-sm font-medium text-brand-ink/80">
+              Sold out
+            </span>
+          ) : (
+            <>
+              <label className="sr-only" htmlFor={`qty-${product.id}`}>
+                Quantity
+              </label>
+              <input
+                id={`qty-${product.id}`}
+                type="number"
+                min={1}
+                max={100}
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, Math.min(100, parseInt(e.target.value, 10) || 1)))}
+                className="w-16 rounded border border-brand-cream bg-white px-2 py-1.5 text-center text-sm text-brand-ink focus:border-brand-copper focus:outline-none focus:ring-1 focus:ring-brand-copper"
+              />
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={adding || !firstVariant}
+                className="rounded bg-brand-ink px-4 py-2 text-sm font-medium text-brand-offwhite hover:bg-brand-ink/90 disabled:opacity-50 transition-colors"
+              >
+                {adding ? "Adding…" : "Add to cart"}
+              </button>
+            </>
+          )}
           <button
             type="button"
             onClick={onMoreInfo}

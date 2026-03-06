@@ -38,6 +38,7 @@ export function ProductModal({ handle, onClose }: Props) {
   const firstVariant = product?.variants.nodes[0];
   const pickup = product ? getFirstVariantPickup(product) : null;
   const price = product?.priceRange.minVariantPrice;
+  const soldOut = !product?.availableForSale || !firstVariant?.availableForSale;
   const images = product?.images?.length ? product.images : product?.featuredImage ? [product.featuredImage] : [];
   const [imageIndex, setImageIndex] = useState(0);
 
@@ -46,7 +47,7 @@ export function ProductModal({ handle, onClose }: Props) {
   }, [product?.id]);
 
   const handleAddToCart = async () => {
-    if (!firstVariant) return;
+    if (!firstVariant || soldOut) return;
     setAdding(true);
     try {
       await addToCart(firstVariant.id, quantity);
@@ -133,6 +134,7 @@ export function ProductModal({ handle, onClose }: Props) {
               {price && (
                 <p className="text-lg font-medium text-brand-ink">
                   ${parseFloat(price.amount).toFixed(2)} {price.currencyCode}
+                  {soldOut && <span className="ml-2 text-sm font-normal text-brand-ink/70">— Sold out</span>}
                 </p>
               )}
               {(product.descriptionHtml ?? product.description) && (
@@ -156,24 +158,32 @@ export function ProductModal({ handle, onClose }: Props) {
                 </div>
               )}
               <div className="flex flex-wrap items-center gap-3 pt-2">
-                <label className="sr-only" htmlFor="modal-qty">Quantity</label>
-                <input
-                  id="modal-qty"
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={quantity}
-                  onChange={(e) => setQuantity(Math.max(1, Math.min(100, parseInt(e.target.value, 10) || 1)))}
-                  className="w-16 rounded border border-brand-cream bg-white px-2 py-2 text-center text-brand-ink focus:border-brand-copper focus:outline-none focus:ring-1 focus:ring-brand-copper"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  disabled={adding || !firstVariant}
-                  className="rounded bg-brand-ink px-5 py-2 text-sm font-medium text-brand-offwhite hover:bg-brand-ink/90 disabled:opacity-50 transition-colors"
-                >
-                  {adding ? "Adding…" : "Add to cart"}
-                </button>
+                {soldOut ? (
+                  <span className="rounded border border-brand-cream bg-brand-cream/50 px-4 py-2 text-sm font-medium text-brand-ink/80">
+                    Sold out
+                  </span>
+                ) : (
+                  <>
+                    <label className="sr-only" htmlFor="modal-qty">Quantity</label>
+                    <input
+                      id="modal-qty"
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, Math.min(100, parseInt(e.target.value, 10) || 1)))}
+                      className="w-16 rounded border border-brand-cream bg-white px-2 py-2 text-center text-brand-ink focus:border-brand-copper focus:outline-none focus:ring-1 focus:ring-brand-copper"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddToCart}
+                      disabled={adding || !firstVariant}
+                      className="rounded bg-brand-ink px-5 py-2 text-sm font-medium text-brand-offwhite hover:bg-brand-ink/90 disabled:opacity-50 transition-colors"
+                    >
+                      {adding ? "Adding…" : "Add to cart"}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           )}
