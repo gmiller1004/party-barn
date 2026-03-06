@@ -38,7 +38,7 @@ export function ChatPanel() {
         onClick={closeChat}
       />
       <aside
-        className="fixed bottom-0 right-0 top-0 z-50 flex w-full max-w-[100vw] flex-col overflow-x-hidden bg-brand-offwhite shadow-2xl md:bottom-auto md:right-6 md:top-24 md:max-h-[calc(100vh-6rem)] md:max-w-md md:rounded-xl md:border md:border-brand-cream"
+        className="fixed inset-x-0 bottom-0 top-0 z-50 flex flex-col overflow-x-hidden bg-brand-offwhite shadow-2xl md:inset-auto md:right-6 md:top-24 md:w-full md:max-w-md md:max-h-[calc(100vh-6rem)] md:rounded-xl md:border md:border-brand-cream"
         aria-label="Chat with Nicole"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-brand-cream bg-brand-cream/40 px-4 py-3">
@@ -135,8 +135,8 @@ export function ChatPanel() {
           <div ref={bottomRef} />
         </div>
 
-        <form onSubmit={handleSubmit} className="shrink-0 border-t border-brand-cream p-4">
-          <div className="flex min-w-0 gap-2">
+        <form onSubmit={handleSubmit} className="w-full shrink-0 overflow-hidden border-t border-brand-cream p-4">
+          <div className="flex w-full min-w-0 gap-2">
             <input
               type="text"
               value={input}

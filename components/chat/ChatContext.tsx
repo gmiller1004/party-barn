@@ -181,6 +181,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         closeChat: () => {
         if (conversationId) requestSendTranscript(conversationId);
         setIsOpen(false);
+        if (typeof window !== "undefined") {
+          document.documentElement.scrollLeft = 0;
+          document.body.scrollLeft = 0;
+        }
       },
         toggleChat: () => setIsOpen((o) => !o),
         sendMessage,

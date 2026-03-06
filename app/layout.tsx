@@ -88,9 +88,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfair.variable} ${dmSans.variable} ${jetbrainsMono.variable} ${madisonSauvageScript.variable}`}
+      className={`overflow-x-hidden ${playfair.variable} ${dmSans.variable} ${jetbrainsMono.variable} ${madisonSauvageScript.variable}`}
     >
-      <body className="min-h-screen flex flex-col">
+      <body className="min-h-screen flex flex-col overflow-x-hidden">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
