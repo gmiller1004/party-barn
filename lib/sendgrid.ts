@@ -112,3 +112,75 @@ export async function sendTranscriptEmail(
     throw new Error(`SendGrid error ${res.status}: ${err}`);
   }
 }
+
+/** Contact form submission payload for the notification email to Nicole. */
+export type ContactSubmission = {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+};
+
+const SUBJECT_LABELS: Record<string, string> = {
+  "event-styling": "Event styling inquiry",
+  balloons: "Balloon order / question",
+  general: "General question",
+};
+
+/** Send contact form details to nicole@party-barn.com (or CONTACT_TO_EMAIL). */
+export async function sendContactNotificationEmail(data: ContactSubmission): Promise<void> {
+  const apiKey = process.env.SENDGRID_API_KEY;
+  const fromEmail = process.env.SENDER_EMAIL;
+  const fromName = process.env.SENDER_NAME ?? "Party Barn Website";
+  const toEmail = process.env.CONTACT_TO_EMAIL ?? "nicole@party-barn.com";
+
+  if (!apiKey || !fromEmail) {
+    throw new Error("SENDGRID_API_KEY and SENDER_EMAIL are required to send contact notifications.");
+  }
+
+  const subjectLabel = SUBJECT_LABELS[data.subject] ?? data.subject || "Contact form";
+  const safeName = data.name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const safeEmail = data.email.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const safeMessage = data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0; padding:0; background:${colors.offwhite}; font-family: Georgia, serif;">
+  <div style="max-width:560px; margin:0 auto; padding:24px;">
+    <div style="background:${colors.copper}; color:${colors.offwhite}; padding:20px 24px; border-radius:12px 12px 0 0;">
+      <p style="margin:0; font-size:18px; font-weight:600;">New contact form submission</p>
+      <p style="margin:8px 0 0 0; font-size:14px; opacity:0.95;">${subjectLabel}</p>
+    </div>
+    <div style="background:white; padding:20px 24px 24px; border:1px solid ${colors.cream}; border-top:none; border-radius:0 0 12px 12px;">
+      <p style="margin:0 0 12px 0; font-size:14px; color:${colors.ink};"><strong>From:</strong> ${safeName} &lt;<a href="mailto:${safeEmail}" style="color:${colors.copper};">${safeEmail}</a>&gt;</p>
+      <p style="margin:0 0 16px 0; font-size:14px; color:${colors.ink};"><strong>Subject:</strong> ${subjectLabel}</p>
+      <div style="font-size:14px; color:${colors.ink}; line-height:1.6;">${safeMessage}</div>
+      <p style="margin:20px 0 0 0; font-size:12px; color:${colors.sand};">Sent from Party Barn contact form</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  const body = {
+    personalizations: [{ to: [{ email: toEmail }] }],
+    from: { email: fromEmail, name: fromName },
+    subject: `Contact: ${subjectLabel} – ${data.name}`,
+    content: [{ type: "text/html", value: html }],
+  };
+
+  const res = await fetch(SENDGRID_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`SendGrid error ${res.status}: ${err}`);
+  }
+}

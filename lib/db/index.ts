@@ -134,3 +134,20 @@ export async function getConversationsPendingTranscript(minutesAgo: number): Pro
   `;
   return rows as Array<{ id: string; contact_name: string | null; contact_email: string }>;
 }
+
+/** Insert a contact form submission. */
+export async function insertContactSubmission(data: {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}): Promise<string> {
+  const sql = getSql();
+  const rows = await sql`
+    INSERT INTO contact_submissions (name, email, subject, message)
+    VALUES (${data.name.trim()}, ${data.email.trim().toLowerCase()}, ${data.subject.trim()}, ${data.message.trim()})
+    RETURNING id
+  `;
+  const row = rows[0] as { id: string };
+  return row.id;
+}
