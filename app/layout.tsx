@@ -4,6 +4,9 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { ChatProvider } from "@/components/chat/ChatContext";
+import { ChatButton } from "@/components/chat/ChatButton";
+import { ChatPanel } from "@/components/chat/ChatPanel";
 
 /** Elegant display serif – close stand-in for Sauvage Serif (Art Deco–inspired, high-contrast headlines). */
 const playfair = Playfair_Display({
@@ -57,9 +60,13 @@ export default function RootLayout({
       className={`${playfair.variable} ${dmSans.variable} ${jetbrainsMono.variable} ${madisonSauvageScript.variable}`}
     >
       <body className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <ChatProvider>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <ChatButton />
+          <ChatPanel />
+        </ChatProvider>
       </body>
     </html>
   );
