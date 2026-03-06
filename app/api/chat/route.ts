@@ -43,9 +43,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Chat is not configured (missing XAI_API_KEY)." }, { status: 503 });
   }
 
-  const dbUrl = process.env.DATABASE_URL;
+  const dbUrl = process.env.DATABASE_URL || process.env.STORAGE_DATABASE_URL;
   if (!dbUrl) {
-    return NextResponse.json({ error: "Chat storage is not configured (missing DATABASE_URL)." }, { status: 503 });
+    return NextResponse.json(
+      { error: "Chat storage is not configured (missing DATABASE_URL or STORAGE_DATABASE_URL)." },
+      { status: 503 }
+    );
   }
 
   let body: { conversationId?: string; message?: string };

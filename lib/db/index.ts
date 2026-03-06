@@ -1,9 +1,14 @@
 import { neon } from "@neondatabase/serverless";
 
+/** Connection string: DATABASE_URL (local) or STORAGE_DATABASE_URL (e.g. Vercel). */
+function getConnectionUrl(): string {
+  const url = process.env.DATABASE_URL || process.env.STORAGE_DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL or STORAGE_DATABASE_URL is not set");
+  return url;
+}
+
 function getSql() {
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is not set");
-  return neon(url);
+  return neon(getConnectionUrl());
 }
 
 export type MessageRow = {

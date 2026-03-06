@@ -5,7 +5,7 @@ type Params = { params: Promise<{ conversationId: string }> };
 
 /** GET /api/chat/[conversationId] – return all messages for a conversation. */
 export async function GET(request: NextRequest, { params }: Params) {
-  if (!process.env.DATABASE_URL) {
+  if (!process.env.DATABASE_URL && !process.env.STORAGE_DATABASE_URL) {
     return NextResponse.json({ error: "Chat storage is not configured." }, { status: 503 });
   }
 
